@@ -6,8 +6,10 @@ const requiresAuth = require('../middleware/auth-middleware');
 // const auth = require('./scheme-model.js');
 express.post("/register", (req, res) => {
  let userInformation = req.body;
- bcrypt.hash(userInformation.password, 12, (err, hashedPasswod) => {
-   userInformation.password = hashedPasswod;
+//  bcrypt.hash(userInformation.password, 12, (err, hashedPasswod) => {
+//    userInformation.password = hashedPasswod;
+ const hash = bcrypt.hashSync(userInformation.password, 12);
+ userInformation.password = hash;
    auth
      .add(userInformation)
      .then(saved => {
@@ -16,7 +18,7 @@ express.post("/register", (req, res) => {
      .catch(error => {
        res.status(500).json(error);
      });
- });
+//  }); commented out because didn't want to wrap it
 });
 express.post("/login", (req, res) => {
  let { username, password } = req.body;
@@ -26,6 +28,7 @@ express.post("/login", (req, res) => {
    .then(user => {
      // check that the password is valid
      if (user && bcrypt.compareSync(password, user.password)) {
+       req.session.user = user.username;
        res.status(200).json({ message: `Welcome ${user.username}!` });
      } else {
        res.status(401).json({ message: "Invalid Credentials" });
@@ -43,5 +46,5 @@ express.get('/', requiresAuth, (req, res) => {
      })
      .catch(err => res.send(err));
  });
- 
+
 module.exports = express;
